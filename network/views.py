@@ -152,5 +152,23 @@ def follow_toggle(request, user_id):
 
     return JsonResponse({"error": "PUT required"}, status=400)
 
-    
+@login_required
+def following(request):
+    # users current user is following
+    following_users = Follow.objects.filter(
+        follower=request.user
+    ).values_list("following", flat=True)
 
+    # filter posts from those users
+    posts = Post.objects.filter(
+        user__in=following_users
+    ).order_by("-timestamp")
+
+    # pagination (same as index)
+    paginator = Paginator(posts, 3)
+    page_number = request.GET.get("page")
+    page_obj = paginator.get_page(page_number)
+
+    return render(request, "network/following.html", {
+        "page_obj": page_obj
+    })
