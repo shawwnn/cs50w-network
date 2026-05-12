@@ -1,8 +1,10 @@
 from django.contrib.auth import authenticate, login, logout
 from django.db import IntegrityError
-from django.http import HttpResponse, HttpResponseRedirect
+from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
+from django.contrib.auth.decorators import login_required
+
 
 from .models import Post, User, Follow
 
@@ -111,4 +113,37 @@ def profile(request, username):
         "following_count": following_count,
         "is_following": is_following
     })
+
+@login_required
+def follow_toggle(request, user_id):
+    if request.method == "PUT":
+        target_user = User.objects.get(pk=user_id)
+
+        follow = Follow.objects.filter(
+            follower=request.user,
+            following=target_user
+        )
+
+        if follow.exists():
+            follow.delete()
+            following = False
+        else:
+            Follow.objects.create(
+                follower=request.user,
+                following=target_user
+            )
+            following = True
+
+        followers_count = Follow.objects.filter(
+            following=target_user
+        ).count()
+
+        return JsonResponse({
+            "following": following,
+            "followers_count": followers_count
+        })
+
+    return JsonResponse({"error": "PUT required"}, status=400)
+
+    
 
