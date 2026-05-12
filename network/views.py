@@ -5,6 +5,8 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
+from .utils import paginate_queryset
+
 
 
 from .models import Post, User, Follow
@@ -24,15 +26,11 @@ def index(request):
     
     posts = Post.objects.all().order_by("-timestamp")
 
-    # Pagination added
-    paginator = Paginator(posts, 3)  # 3 posts per page
-    page_number = request.GET.get("page")
-    page_obj = paginator.get_page(page_number)
+    page_obj = paginate_queryset(request, posts, 3)
 
     return render(request, "network/index.html", {
         "page_obj": page_obj
     })
-    # Pagination ended
 
 
 def login_view(request):
@@ -165,9 +163,7 @@ def following(request):
     ).order_by("-timestamp")
 
     # pagination (same as index)
-    paginator = Paginator(posts, 3)
-    page_number = request.GET.get("page")
-    page_obj = paginator.get_page(page_number)
+    page_obj = paginate_queryset(request, posts, 3)
 
     return render(request, "network/following.html", {
         "page_obj": page_obj
