@@ -6,11 +6,7 @@ from django.urls import reverse
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
 from .utils import paginate_queryset
-
-
-
-from .models import Post, User, Follow
-
+from .models import Post, User, Follow, Like
 
 def index(request):
     if request.method == "POST":
@@ -149,6 +145,39 @@ def follow_toggle(request, user_id):
         })
 
     return JsonResponse({"error": "PUT required"}, status=400)
+
+@login_required
+def like_toggle(request, post_id):
+    if request.method == "PUT":
+        post = Post.objects.get(pk=post_id)
+
+        like = Like.objects.filter(
+            user=request.user,
+            post=post
+        )
+
+        if like.exists():
+            like.delete()
+            liked = False
+        else:
+            Like.objects.create(
+                user=request.user,
+                post=post
+            )
+            liked = True
+
+        likes_count = Like.objects.filter(
+            post=post
+        ).count()
+
+        return JsonResponse({
+            "liked": liked,
+            "likes_count": likes_count
+        })
+
+    return JsonResponse({
+        "error": "PUT request required."
+    }, status=400)
 
 @login_required
 def following(request):

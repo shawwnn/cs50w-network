@@ -38,18 +38,12 @@ class Follow(models.Model):
         return f"{self.follower} follows {self.following}"
 
 class Like(models.Model):
-    user = models.ForeignKey(
-        User,
-        on_delete=models.CASCADE
-    )
-
-    post = models.ForeignKey(
-        Post,
-        on_delete=models.CASCADE,
-        related_name="likes"
-    )
-
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="likes")
+    post = models.ForeignKey(Post, on_delete=models.CASCADE, related_name="likes")
     timestamp = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('user', 'post')  # prevents double likes
 
     def __str__(self):
         return f"{self.user} likes Post {self.post.id}"   

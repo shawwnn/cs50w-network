@@ -35,74 +35,9 @@
 </div>
 
 {% for post in posts %}
-    <div class="post card p-3 mb-2">
-        <strong>{{ post.user.username }}</strong><br>
-        {{ post.content }}<br>
-        <small>{{ post.timestamp }}</small>
-    </div>
+    {% include "network/partials/post_card.html" with post=post %}
 {% empty %}
     <p>No posts yet.</p>
 {% endfor %}
-
-<script>
-
-    function getCookie(name) {
-        let cookieValue = null;
-
-        if (document.cookie && document.cookie !== "") {
-            const cookies = document.cookie.split(";");
-
-            for (let i = 0; i < cookies.length; i++) {
-
-                const cookie = cookies[i].trim();
-
-                if (cookie.substring(0, name.length + 1) === (name + "=")) {
-
-                    cookieValue = decodeURIComponent(
-                        cookie.substring(name.length + 1)
-                    );
-
-                    break;
-                }
-            }
-        }
-        
-        return cookieValue;
-    }
-
-    document.addEventListener("DOMContentLoaded", () => {
-        const button = document.querySelector("#follow-btn");
-
-        if (button) {
-            button.addEventListener("click", () => {
-                const userId = button.dataset.userId;    
-
-                fetch(`/follow/${userId}`, {
-                    method: "PUT",
-                    headers: {
-                        "X-CSRFToken": getCookie("csrftoken")
-                    }
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.following) {
-                        button.innerHTML = "Unfollow";
-
-                        button.classList.remove("btn-primary");
-                        button.classList.add("btn-outline-danger");
-                    } else {
-                        button.innerHTML = "Follow";
-
-                        button.classList.remove("btn-outline-danger");
-                        button.classList.add("btn-primary");
-                    }
-
-                    document.querySelector("#followers-count").innerHTML =
-                        data.followers_count;
-                })
-            })
-        }
-    })
-</script>
 
 {% endblock %}
