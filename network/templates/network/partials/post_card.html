@@ -15,11 +15,15 @@
           class="btn btn-sm btn-light me-2 px-3 rounded-pill like-btn"
           data-post-id="{{ post.id }}"
       >
-          Like
+          {% if post.is_liked %}
+              Unlike
+          {% else %}
+              Like
+          {% endif %}
       </button>
 
       <span class="text-muted small" id="likes-count-{{ post.id }}">
-          {{ post.likes.count }} likes
+          {{ post.like_count }} likes
       </span>
   </div>
 

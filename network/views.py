@@ -5,7 +5,7 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
-from .utils import paginate_queryset
+from .utils import paginate_queryset, annotate_posts
 from .models import Post, User, Follow, Like
 
 def index(request):
@@ -21,6 +21,7 @@ def index(request):
         return redirect("index")
     
     posts = Post.objects.all().order_by("-timestamp")
+    posts = annotate_posts(posts, request.user)
 
     page_obj = paginate_queryset(request, posts, 3)
 
@@ -87,6 +88,9 @@ def profile(request, username):
     posts = Post.objects.filter(
         user=profile_user
     ).order_by("-timestamp")
+    posts = annotate_posts(posts, request.user)
+
+    page_obj = paginate_queryset(request, posts, 3)
 
     # number of followers
     followers_count = Follow.objects.filter(
@@ -109,7 +113,7 @@ def profile(request, username):
 
     return render(request, "network/profile.html", {
         "profile_user": profile_user,
-        "posts": posts,
+        "page_obj": page_obj,
         "followers_count": followers_count,
         "following_count": following_count,
         "is_following": is_following
@@ -190,6 +194,7 @@ def following(request):
     posts = Post.objects.filter(
         user__in=following_users
     ).order_by("-timestamp")
+    posts = annotate_posts(posts, request.user)
 
     # pagination (same as index)
     page_obj = paginate_queryset(request, posts, 3)
@@ -197,3 +202,4 @@ def following(request):
     return render(request, "network/following.html", {
         "page_obj": page_obj
     })
+
