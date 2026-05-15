@@ -17,6 +17,15 @@ function getCookie(name) {
   return cookieValue;
 }
 
+function exitEditAndUpdateInnerText(postId, newText) {
+  const contentEl = document.querySelector(`#content-${postId}`);
+  const postCard = document.querySelector(`#post-${postId}`);
+  const editBtn = postCard.querySelector(".edit-btn");
+
+  contentEl.innerText = newText;
+  editBtn.disabled = false;
+}
+
 document.addEventListener("DOMContentLoaded", () => {
 
   // =====================
@@ -78,4 +87,73 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
+  // =====================
+  // CLICK DELEGATION (EDIT + CANCEL)
+  // =====================
+  document.addEventListener("click", function (e) {
+
+    // =====================
+    // EDIT CLICK
+    // =====================
+    if (e.target.classList.contains("edit-btn")) {
+      // disable edit button immediately
+      e.target.disabled = true;
+
+      const postId = e.target.dataset.id;
+      const contentEl = document.querySelector(`#content-${postId}`);
+
+      // store original safely
+      contentEl.dataset.original = contentEl.innerText;
+      const currentText = contentEl.innerText;
+
+      contentEl.innerHTML = `
+        <textarea class="form-control mb-2" id="textarea-${postId}">${currentText}</textarea>
+
+        <div class="d-flex gap-2">
+          <button class="btn btn-sm btn-success rounded-pill px-3 save-btn" data-id="${postId}">
+            Save
+          </button>
+
+          <button class="btn btn-sm btn-outline-secondary rounded-pill px-3 cancel-btn" data-id="${postId}">
+            Cancel
+          </button>
+        </div>
+      `;
+    }
+
+    // =====================
+    // CANCEL
+    // =====================
+    if (e.target.classList.contains("cancel-btn")) {
+      const postId = e.target.dataset.id;
+      const contentEl = document.querySelector(`#content-${postId}`);
+
+      exitEditAndUpdateInnerText(postId, contentEl.dataset.original);
+
+    }
+
+    // =====================
+    // SAVE 
+    // =====================
+    if (e.target.classList.contains("save-btn")) {
+      const postId = e.target.dataset.id;
+      const textarea = document.querySelector(`#textarea-${postId}`);
+      const newContent = textarea.value;
+
+      fetch(`/edit_post/${postId}`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded",
+          "X-CSRFToken": getCookie("csrftoken")
+        },
+        body: `content=${encodeURIComponent(newContent)}`
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.content) {
+          exitEditAndUpdateInnerText(postId, data.content);
+        }
+      });
+    }
+  })
 });

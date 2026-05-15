@@ -8,6 +8,7 @@
         <div class="card p-3 mb-3">
              <form action="{% url 'index' %}" method="POST">
                 {% csrf_token %}
+                <h2>New Post</h2>
 
                 <textarea
                     class="form-control mb-2"
@@ -23,6 +24,7 @@
                 >
              </form>
         </div>
+    {% endif %}
 
         {% for post in page_obj %}
             {% include "network/partials/post_card.html" with post=post %}
@@ -56,5 +58,5 @@
         </nav>
 
 
-    {% endif %}
+    
 {% endblock %}

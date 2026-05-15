@@ -23,7 +23,7 @@ def index(request):
     posts = Post.objects.all().order_by("-timestamp")
     posts = annotate_posts(posts, request.user)
 
-    page_obj = paginate_queryset(request, posts, 3)
+    page_obj = paginate_queryset(request, posts, 10)
 
     return render(request, "network/index.html", {
         "page_obj": page_obj
@@ -90,7 +90,7 @@ def profile(request, username):
     ).order_by("-timestamp")
     posts = annotate_posts(posts, request.user)
 
-    page_obj = paginate_queryset(request, posts, 3)
+    page_obj = paginate_queryset(request, posts, 10)
 
     # number of followers
     followers_count = Follow.objects.filter(
@@ -197,9 +197,33 @@ def following(request):
     posts = annotate_posts(posts, request.user)
 
     # pagination (same as index)
-    page_obj = paginate_queryset(request, posts, 3)
+    page_obj = paginate_queryset(request, posts, 10)
 
     return render(request, "network/following.html", {
         "page_obj": page_obj
     })
+
+@login_required
+def edit_post(request, post_id):
+    if request.method != "POST":
+        return JsonResponse({"error": "POST required"}, status=400)
+
+    post = get_object_or_404(Post, id=post_id)
+
+    if request.user != post.user:
+        return JsonResponse({"error": "Unauthorized to edit selected post"}, status=403)
+
+    content = request.POST.get("content", "").strip()
+
+    if not content:
+        return JsonResponse({"error": "Empty content"}, status=400)
+    
+    post.content = content
+    post.save()
+
+    return JsonResponse({
+        "id": post.id,
+        "content": post.content
+    })
+
 
